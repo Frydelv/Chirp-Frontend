@@ -30,7 +30,7 @@
 </script>
 
 <svelte:head>
-  <title>Support | YourSite</title>
+  <title>Support | Chirp</title>
   <meta name="description" content="Need help? Contact our support team for quick assistance." />
 </svelte:head>
 
