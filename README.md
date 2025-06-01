@@ -1,6 +1,6 @@
 # Frontend
 Maintainers:
-[Ronalds13424](https://github.com/Ronalds13424)
+[Ron Turner](https://github.com/ternersronalds)
 [GGLVXD](https://github.com/GGLVXD)
 
 ## CC0 1.0 Universal (Public Domain Dedication)
