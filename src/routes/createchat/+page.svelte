@@ -2,13 +2,15 @@
     import { goto } from '$app/navigation'; 
     import "$lib/global.css";
     import { onMount } from 'svelte';
+    import { env } from '$env/dynamic/public';
 
+    let SERVER_URL = env.PUBLIC_SERVER_URL;
     let friends = [];
     let selectedChatType = null;
 
     async function fetchFriends() {
         const token = localStorage.getItem('token');
-        const response = await fetch('https://chirp-backend.meetronturner.com/v1/friend/friends', {
+        const response = await fetch(`${SERVER_URL}/v1/friend/friends`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -37,7 +39,7 @@
 
     async function startChat(friendId) {
         const token = localStorage.getItem('token');
-        const response = await fetch('https://chirp-backend.meetronturner.com/v1/createchat/directmessage', {
+        const response = await fetch(`${SERVER_URL}/v1/createchat/directmessage`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,

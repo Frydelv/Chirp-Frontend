@@ -1,7 +1,10 @@
 <script>
     import { writable } from 'svelte/store';
     import "$lib/global.css";
+    import { env } from '$env/dynamic/public';
 
+
+    let SERVER_URL = env.PUBLIC_SERVER_URL;
     // Define writable stores for form fields and messages
     const email = writable('');
     const password = writable('');
@@ -20,7 +23,7 @@
         };
 
         try {
-            const response = await fetch('https://chirp-backend.meetronturner.com/v1/login', { 
+            const response = await fetch(`${SERVER_URL}/v1/login`, { 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -3,9 +3,11 @@
     import { goto } from '$app/navigation';
     import { writable } from 'svelte/store';
     import { socketStore } from '../stores/socket.js'; 
+    import { env } from '$env/dynamic/public';
   
     let chats = [];
     let socket;
+    let SERVER_URL = env.PUBLIC_SERVER_URL;
   
     async function fetchChats() {
         const token = localStorage.getItem('token');
@@ -14,7 +16,7 @@
             return;
         }
   
-        const response = await fetch('https://chirp-backend.meetronturner.com/v1/chat/list', {
+        const response = await fetch(`${SERVER_URL}/v1/chat/list`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -27,7 +29,7 @@
                 id: chat.id,
                 name: chat.name,
                 lastMessage: chat.lastMessage || '', 
-                pfp: 'https://chirp-backend.meetronturner.com/default.png' 
+                pfp: '${SERVER_URL}/default.png' 
             }));
         } else {
             console.error('Failed to fetch chats:', response.statusText);

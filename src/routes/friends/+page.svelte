@@ -3,7 +3,9 @@
     import { socketStore } from '../../stores/socket.js';
     import "$lib/global.css";
     import { writable } from 'svelte/store';
+    import { env } from '$env/dynamic/public';
 
+    let SERVER_URL = env.PUBLIC_SERVER_URL;
     let friends = [];
     let incomingRequests = [];
     let friendUsername = '';
@@ -19,7 +21,7 @@
         if (!token) return;
 
         try {
-            const response = await fetch('https://chirp-backend.meetronturner.com/friend/friends', {
+            const response = await fetch(`${SERVER_URL}/friend/friends`, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -44,7 +46,7 @@
         if (!token) return;
 
         try {
-            const response = await fetch('https://chirp-backend.meetronturner.com/v1/friend/incoming', {
+            const response = await fetch(`${SERVER_URL}/v1/friend/incoming`, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -61,7 +63,7 @@
     const acceptRequest = async (id) => {
         const token = getToken();
         try {
-            const response = await fetch('https://chirp-backend.meetronturner.com/v1/friend/accept', {
+            const response = await fetch(`${SERVER_URL}/v1/friend/accept`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -81,7 +83,7 @@
     const declineRequest = async (id) => {
         const token = getToken();
         try {
-            const response = await fetch('https://chirp-backend.meetronturner.com/v1/friend/decline', {
+            const response = await fetch(`${SERVER_URL}/v1/friend/decline`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -123,7 +125,7 @@
         const token = getToken();
         if (token) {
             try {
-                const response = await fetch('https://chirp-backend.meetronturner.com/v1/friend/add', {
+                const response = await fetch(`${SERVER_URL}/v1/friend/add`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

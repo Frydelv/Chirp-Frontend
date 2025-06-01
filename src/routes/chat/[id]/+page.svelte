@@ -4,7 +4,10 @@
     import { io } from 'socket.io-client';
     import Sidebar from '$lib/Sidebar.svelte';
     import '$lib/global.css';
+    import { env } from '$env/dynamic/public';
 
+
+    let SERVER_URL = env.PUBLIC_SERVER_URL;
     let messages = writable([]);
     let currentPage = 1;
     let chatId = '';
@@ -29,7 +32,7 @@
     async function fetchMessages(page = 1, initialLoad = false) {
         loading.set(true);
         try {
-            const res = await fetch(`https://chirp-backend.meetronturner.com/v1/message/read?cid=${chatId}&p=${page}`, {
+            const res = await fetch(`${SERVER_URL}/v1/message/read?cid=${chatId}&p=${page}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -68,7 +71,7 @@
         if (!newMessage.trim()) return;
         isSending.set(true);
         try {
-            const res = await fetch(`https://chirp-backend.meetronturner.com/v1/message/send`, {
+            const res = await fetch(`${SERVER_URL}/v1/message/send`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -107,7 +110,7 @@
         token = localStorage.getItem('token');
         fetchMessages(1, true);
 
-        socket = io('https://chirp-backend.meetronturner.com');
+        socket = io(`${env.SERVER_URL}`);
         socket.on('connect', () => {
             socket.emit('joinChat', chatId);
         });

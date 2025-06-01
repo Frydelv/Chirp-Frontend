@@ -1,6 +1,9 @@
 // src/stores/socket.js
 import { writable } from 'svelte/store';
 import { io } from 'socket.io-client';
+import { env } from '$env/dynamic/public';
+
+const WEBSOCKET_URL= env.PUBLIC_WEBSOCKET_URL;
 
 // Create a writable store to manage the socket instance
 export const socketStore = writable(null);
@@ -12,7 +15,7 @@ if (typeof window !== 'undefined') {
 
     // Ensure the token exists before attempting to connect
     if (token) {
-        const socket = io('https://chirp-backend.meetronturner.com', {  // Use 'https' instead of 'wss'
+        const socket = io(`${WEBSOCKET_URL}`, {  // Use 'https' instead of 'wss'
             auth: {
                 token: token // Send token as part of the connection
             },
