@@ -16,7 +16,7 @@
         const userData = {
             email: $email,
             password: $password,
-            passwordconfirm: $passwordConfirm,
+            passwordConfirm: $passwordConfirm,
             username: $username
         };
 
