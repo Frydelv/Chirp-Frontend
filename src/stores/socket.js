@@ -12,7 +12,7 @@ if (typeof window !== 'undefined') {
 
     // Ensure the token exists before attempting to connect
     if (token) {
-        const socket = io('https://plevortapi.fryde.id.lv', {  // Use 'https' instead of 'wss'
+        const socket = io('https://chirp-backend.meetronturner.com', {  // Use 'https' instead of 'wss'
             auth: {
                 token: token // Send token as part of the connection
             },

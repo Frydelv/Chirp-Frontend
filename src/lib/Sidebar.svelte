@@ -14,7 +14,7 @@
             return;
         }
   
-        const response = await fetch('https://plevortapi.fryde.id.lv/v1/chat/list', {
+        const response = await fetch('https://chirp-backend.meetronturner.com/v1/chat/list', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -27,7 +27,7 @@
                 id: chat.id,
                 name: chat.name,
                 lastMessage: chat.lastMessage || '', 
-                pfp: 'https://plevort.fryde.id.lv/default.png' 
+                pfp: 'https://chirp-backend.meetronturner.com/default.png' 
             }));
         } else {
             console.error('Failed to fetch chats:', response.statusText);
