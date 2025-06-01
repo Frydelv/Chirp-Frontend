@@ -8,7 +8,7 @@
 
     async function fetchFriends() {
         const token = localStorage.getItem('token');
-        const response = await fetch('https://plevortapi.fryde.id.lv/v1/friend/friends', {
+        const response = await fetch('https://chirp-backend.meetronturner.com/v1/friend/friends', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -37,7 +37,7 @@
 
     async function startChat(friendId) {
         const token = localStorage.getItem('token');
-        const response = await fetch('https://plevortapi.fryde.id.lv/v1/createchat/directmessage', {
+        const response = await fetch('https://chirp-backend.meetronturner.com/v1/createchat/directmessage', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,

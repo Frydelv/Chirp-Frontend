@@ -29,7 +29,7 @@
     async function fetchMessages(page = 1, initialLoad = false) {
         loading.set(true);
         try {
-            const res = await fetch(`https://plevortapi.fryde.id.lv/v1/message/read?cid=${chatId}&p=${page}`, {
+            const res = await fetch(`https://chirp-backend.meetronturner.com/v1/message/read?cid=${chatId}&p=${page}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -68,7 +68,7 @@
         if (!newMessage.trim()) return;
         isSending.set(true);
         try {
-            const res = await fetch(`https://plevortapi.fryde.id.lv/v1/message/send`, {
+            const res = await fetch(`https://chirp-backend.meetronturner.com/v1/message/send`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -107,7 +107,7 @@
         token = localStorage.getItem('token');
         fetchMessages(1, true);
 
-        socket = io('https://plevortapi.fryde.id.lv');
+        socket = io('https://chirp-backend.meetronturner.com');
         socket.on('connect', () => {
             socket.emit('joinChat', chatId);
         });
