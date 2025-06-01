@@ -19,7 +19,7 @@
         if (!token) return;
 
         try {
-            const response = await fetch('https://plevortapi.fryde.id.lv/v1/friend/friends', {
+            const response = await fetch('https://chirp-backend.meetronturner.com/friend/friends', {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -44,7 +44,7 @@
         if (!token) return;
 
         try {
-            const response = await fetch('https://plevortapi.fryde.id.lv/v1/friend/incoming', {
+            const response = await fetch('https://chirp-backend.meetronturner.com/v1/friend/incoming', {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -61,7 +61,7 @@
     const acceptRequest = async (id) => {
         const token = getToken();
         try {
-            const response = await fetch('https://plevortapi.fryde.id.lv/v1/friend/accept', {
+            const response = await fetch('https://chirp-backend.meetronturner.com/v1/friend/accept', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -81,7 +81,7 @@
     const declineRequest = async (id) => {
         const token = getToken();
         try {
-            const response = await fetch('https://plevortapi.fryde.id.lv/v1/friend/decline', {
+            const response = await fetch('https://chirp-backend.meetronturner.com/v1/friend/decline', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -123,7 +123,7 @@
         const token = getToken();
         if (token) {
             try {
-                const response = await fetch('https://plevortapi.fryde.id.lv/v1/friend/add', {
+                const response = await fetch('https://chirp-backend.meetronturner.com/v1/friend/add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
