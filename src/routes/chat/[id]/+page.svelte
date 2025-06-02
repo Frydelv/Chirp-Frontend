@@ -84,7 +84,6 @@
             if (data.messageId) {
                 newMessage = '';
                 scrollToBottom();
-                // Refresh messages after sending
                 fetchMessages(1, true);
             }
         } catch (error) {
@@ -152,7 +151,16 @@
         </div>
 
         <div class="send-message">
-            <textarea bind:value={newMessage} placeholder="Type a message..."></textarea>
+            <textarea
+                bind:value={newMessage}
+                placeholder="Type a message..."
+                on:keydown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                }}
+            ></textarea>
             <button on:click={sendMessage} disabled={$isSending}>Send</button>
         </div>
     </div>
