@@ -1,11 +1,9 @@
 <script>
     import { onMount } from 'svelte';
     import { writable } from 'svelte/store';
-    import { io } from 'socket.io-client';
     import Sidebar from '$lib/Sidebar.svelte';
     import '$lib/global.css';
     import { env } from '$env/dynamic/public';
-
 
     let SERVER_URL = env.PUBLIC_SERVER_URL;
     let messages = writable([]);
@@ -19,7 +17,6 @@
     let chatContainer;
     let showSidebar = writable(false);
     let isDesktop = writable(false);
-    let socket;
 
     function scrollToBottom() {
         setTimeout(() => {
@@ -87,6 +84,8 @@
             if (data.messageId) {
                 newMessage = '';
                 scrollToBottom();
+                // Refresh messages after sending
+                fetchMessages(1, true);
             }
         } catch (error) {
             console.error('Error sending message:', error);
@@ -110,18 +109,6 @@
         token = localStorage.getItem('token');
         fetchMessages(1, true);
 
-        socket = io(`${env.SERVER_URL}`);
-        socket.on('connect', () => {
-            socket.emit('joinChat', chatId);
-        });
-
-        socket.on('newMessage', (message) => {
-            if (message.chatId === chatId) {
-                messages.update(current => [message, ...current]);
-                scrollToBottom();
-            }
-        });
-
         const updateScreenWidth = () => {
             isDesktop.set(window.innerWidth >= 776);
             showSidebar.set(window.innerWidth >= 776);
@@ -132,7 +119,6 @@
 
         return () => {
             window.removeEventListener('resize', updateScreenWidth);
-            socket.disconnect();
         };
     });
 </script>
