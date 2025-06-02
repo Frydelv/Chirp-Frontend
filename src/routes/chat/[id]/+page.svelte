@@ -1,9 +1,10 @@
 <script>
-    import { onMount } from 'svelte';
-    import { writable } from 'svelte/store';
+    import { onMount, tick } from 'svelte';
+    import { writable, get } from 'svelte/store';
     import Sidebar from '$lib/Sidebar.svelte';
     import '$lib/global.css';
     import { env } from '$env/dynamic/public';
+    import { socketStore } from '$lib/stores/socket.js';
 
     let SERVER_URL = env.PUBLIC_SERVER_URL;
     let messages = writable([]);
@@ -19,11 +20,9 @@
     let isDesktop = writable(false);
 
     function scrollToBottom() {
-        setTimeout(() => {
-            if (chatContainer) {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
-        }, 0);
+        if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
     }
 
     async function fetchMessages(page = 1, initialLoad = false) {
@@ -39,20 +38,18 @@
             if (data.messages.length === 0) {
                 canLoadMore.set(false);
             } else {
-                const fetchedMessages = data.messages.reverse();
+                const fetchedMessages = data.messages;
 
                 if (initialLoad) {
                     messages.set(fetchedMessages);
+                    await tick();
                     scrollToBottom();
                 } else {
                     const previousHeight = chatContainer.scrollHeight;
-
-                    messages.update(current => [...current, ...fetchedMessages]);
-
-                    setTimeout(() => {
-                        const newHeight = chatContainer.scrollHeight;
-                        chatContainer.scrollTop = newHeight - previousHeight;
-                    }, 0);
+                    messages.update(current => [...fetchedMessages, ...current]); 
+                    await tick();
+                    const newHeight = chatContainer.scrollHeight;
+                    chatContainer.scrollTop = newHeight - previousHeight;
                 }
 
                 currentPage = page;
@@ -74,18 +71,13 @@
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    chatId,
-                    content: newMessage
-                })
+                body: JSON.stringify({ chatId, content: newMessage })
             });
             const data = await res.json();
 
             if (data.messageId) {
                 newMessage = '';
-                scrollToBottom();
-                // Refresh messages after sending
-                fetchMessages(1, true);
+                await fetchMessages(1, true);
             }
         } catch (error) {
             console.error('Error sending message:', error);
@@ -94,20 +86,56 @@
         }
     }
 
-    function toggleSidebar() {
-        showSidebar.update(value => !value);
-    }
-
     function handleScroll() {
         if (chatContainer && chatContainer.scrollTop === 0 && $canLoadMore) {
             fetchMessages(currentPage + 1);
         }
     }
 
+    function setupSocket() {
+        socketStore.subscribe(socket => {
+            if (!socket) return;
+
+            socket.on('receiveMessage', async (msg) => {
+                if (msg.chatId !== chatId) return;
+                
+                messages.update(current => {
+                    const messageExists = current.some(m => m.mid === msg.messageId);
+                    if (messageExists) return current;
+
+                    const messageObj = {
+                        ...msg,
+                        mid: msg.messageId,
+                        cnt: msg.content,
+                        createdAt: msg.timestamp,
+                        y: false
+                    };
+                    return [...current, messageObj];
+                });
+                await tick();
+                scrollToBottom();
+            });
+        });
+    }
+
+    function formatTimestamp(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffSeconds = Math.floor((now - date) / 1000);
+
+        if (diffSeconds < 60) return 'just now';
+        if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
+        if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
+        if (diffSeconds < 604800) return `${Math.floor(diffSeconds / 86400)}d ago`;
+        
+        return date.toLocaleDateString();
+    }
+
     onMount(() => {
         chatId = window.location.pathname.split('/').pop();
         token = localStorage.getItem('token');
         fetchMessages(1, true);
+        setupSocket();
 
         const updateScreenWidth = () => {
             isDesktop.set(window.innerWidth >= 776);
@@ -122,10 +150,6 @@
         };
     });
 </script>
-
-{#if !$isDesktop && !$showSidebar}
-    <button class="sidebar-toggle" on:click={toggleSidebar} aria-label="Toggle Sidebar">≡</button>
-{/if}
 
 <div class="chat-wrapper">
     {#if $showSidebar && !$isDesktop}
@@ -144,15 +168,42 @@
             {#if $loading}
                 <p class="loading">Loading more messages...</p>
             {/if}
-            {#each $messages as message}
-                <div class="message {message.uid === 'my-uid' ? 'my-message' : 'other-message'}">
-                    <p>{message.cnt}</p>
+            {#each $messages as msg}
+                <div class="message-row {msg.y ? 'my-message' : 'other-message'}">
+                    {#if !msg.y}
+                        <div class="message-group">
+                            <img class="avatar" src="{SERVER_URL}/default.png" alt="pfp">
+                            <div class="message-content">
+                                <div class="meta">
+                                    <span class="display-name">{msg.displayName}</span>
+                                    <span class="timestamp">{formatTimestamp(msg.createdAt)}</span>
+                                </div>
+                                <div class="bubble">{msg.cnt}</div>
+                            </div>
+                        </div>
+                    {:else}
+                        <div class="message-content">
+                            <div class="meta right">
+                                <span class="timestamp">{formatTimestamp(msg.createdAt)}</span>
+                            </div>
+                            <div class="bubble">{msg.cnt}</div>
+                        </div>
+                    {/if}
                 </div>
             {/each}
         </div>
 
         <div class="send-message">
-            <textarea bind:value={newMessage} placeholder="Type a message..."></textarea>
+            <textarea
+                bind:value={newMessage}
+                placeholder="Type a message..."
+                on:keydown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                }}
+            ></textarea>
             <button on:click={sendMessage} disabled={$isSending}>Send</button>
         </div>
     </div>
@@ -162,7 +213,6 @@
     .chat-wrapper {
         display: flex;
         height: 100vh;
-        flex-direction: row;
     }
 
     .chat-container {
@@ -177,7 +227,73 @@
         flex-grow: 1;
         padding: 20px;
         display: flex;
-        flex-direction: column-reverse;
+        flex-direction: column;
+    }
+
+    .message-row {
+        display: flex;
+        margin-bottom: 16px;
+    }
+
+    .message-group {
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .message-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .my-message {
+        justify-content: flex-end;
+    }
+
+    .other-message {
+        justify-content: flex-start;
+    }
+
+    .bubble {
+        padding: 10px;
+        border-radius: 8px;
+        max-width: 60%;
+        word-break: break-word;
+    }
+
+    .my-message .bubble {
+        background-color: #1e1e1e;
+        color: white;
+    }
+
+    .other-message .bubble {
+        background-color: #1e1e1e;
+        color: white;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 16px;
+    }
+
+    .meta {
+        font-size: 0.9em;
+        color: #dcddde;
+        margin-bottom: 4px;
+        font-weight: 500;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .timestamp {
+        font-size: 0.8em;
+        color: #aaa;
+        margin-left: 8px;
+    }
+
+    .right {
+        justify-content: flex-end;
     }
 
     .send-message {
@@ -212,76 +328,10 @@
         cursor: not-allowed;
     }
 
-    .message {
-        margin-bottom: 10px;
-        padding: 10px;
-        border-radius: 5px;
-        max-width: 60%;
-        word-wrap: break-word;
-        word-break: break-word;
-    }
-
-    .my-message {
-        background-color: #4CAF50;
-        margin-left: auto;
-    }
-
-    .other-message {
-        background-color: #1e1e1e;
-        margin-right: auto;
-    }
-
-    .sidebar-toggle {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: none;
-        border: none;
-        font-size: 24px;
-        color: #fff;
-        z-index: 1001;
-        cursor: pointer;
-    }
-
-    .sidebar-fullscreen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #1c1c1c;
-        z-index: 1002;
-    }
-
-    .close-sidebar {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: none;
-        border: none;
-        font-size: 24px;
-        color: #fff;
-        cursor: pointer;
-    }
-
-    .chat-container {
-        border: none;
-    }
-
     .loading {
         text-align: center;
-        font-size: 0.9em;
         color: #aaa;
-        margin: 10px 0;
-    }
-
-    @media (min-width: 776px) {
-        .sidebar-toggle {
-            display: none;
-        }
-
-        .chat-wrapper {
-            flex-direction: row;
-        }
+        font-size: 0.9em;
+        margin-bottom: 10px;
     }
 </style>

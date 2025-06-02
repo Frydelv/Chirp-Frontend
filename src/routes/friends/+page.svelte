@@ -1,6 +1,5 @@
 <script>
     import { onMount } from 'svelte';
-    import { socketStore } from '../../stores/socket.js';
     import "$lib/global.css";
     import { writable } from 'svelte/store';
     import { env } from '$env/dynamic/public';
@@ -9,7 +8,6 @@
     let friends = [];
     let incomingRequests = [];
     let friendUsername = '';
-    let socket;
     let feedbackMessage = '';
     let feedbackColor = ''; 
     const isMobile = writable(false);
@@ -101,10 +99,6 @@
     };
 
     onMount(() => {
-        const unsubscribe = socketStore.subscribe(value => {
-            socket = value;
-        });
-
         fetchFriends();
         fetchIncomingRequests();
 
@@ -117,7 +111,6 @@
 
         return () => {
             window.removeEventListener('resize', updateScreenWidth);
-            unsubscribe();
         };
     });
 
